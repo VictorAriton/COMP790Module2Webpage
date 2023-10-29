@@ -1,0 +1,409 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analyzing the Shift in U.S. Population Growth: Is It a Cause for Concern?</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .bar {
+            fill: steelblue;
+        }
+        .bar-selected {
+            fill: orange;
+        }
+        .line {
+            fill: none;
+            stroke: red;
+            stroke-width: 2;
+        }
+        .scatter-dot {
+            fill: steelblue;
+            stroke: #333;
+            stroke-width: 1;
+        }
+        .scatter-label {
+            font-size: 12px;
+            text-anchor: middle;
+        }
+        .axis-label {
+            font-size: 14px;
+        }
+        .area {
+            fill: lightblue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analyzing the Shift in U.S. Population Growth: Is It a Cause for Concern?</h1>
+    <p>Author: Victor Ariton</p>
+    <p>
+        As the world undergoes significant transformations marked by rising education levels and improving general living standards, a shared trend among developing nations has emerged: a decline in population growth. With this global problem, it comes with no surprise that America is following suite. With this, there are many stories and narratives populating the web about the impending doom as a result. These narratives argue that a shrinking population could render the U.S. economically fragile. However, articles like intelligencer can often tell exaggerated stories that discredit current trends and fail to lack any attributions to life expectancy and other factors. Thus, it’s good to analyze the data with a clear head and determine whether these stories have any credit to them or are cause for concern.
+    </p>
+
+    <h2>Population Trends Over Time</h2>
+    <p>Author: Victor Ariton</p>
+    <div id="chart1"></div>
+    <select id="yearSelector1"></select>
+    <p id="populationDisplay1"></p>
+
+    <script>
+        var data = [
+            { Year: "1955", Population: 161136449 },
+            { Year: "1960", Population: 176188578 },
+            { Year: "1965", Population: 189703283 },
+            { Year: "1970", Population: 200328340 },
+            { Year: "1975", Population: 211274535 },
+            { Year: "1980", Population: 223140018 },
+            { Year: "1985", Population: 235146182 },
+            { Year: "1990", Population: 248083732 },
+            { Year: "1995", Population: 265660556 },
+            { Year: "2000", Population: 282398554 },
+            { Year: "2005", Population: 296842670 },
+            { Year: "2010", Population: 311182845 },
+            { Year: "2015", Population: 324607776 },
+            { Year: "2020", Population: 335942003 },
+            { Year: "2022", Population: 338289857 },
+            { Year: "2023", Population: 339996563 }
+        ];
+
+        data.forEach(function(d) {
+            d.Population = (d.Population / 1000000).toFixed(2); // Display in millions
+        });
+
+        var years = [...new Set(data.map(d => d.Year))];
+
+
+        var yearSelector = d3.select("#yearSelector1");
+        yearSelector.selectAll("option")
+            .data(years)
+            .enter()
+            .append("option")
+            .text(function(d) { return d; });
+
+        var margin = { top: 20, right: 20, bottom: 70, left: 80 };
+        var width = 800 - margin.left - margin.right;
+        var height = 400 - margin.top - margin.bottom;
+
+        var svg = d3.select("#chart1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var x = d3.scaleBand()
+            .domain(data.map(function (d) { return d.Year; }))
+            .range([0, width])
+            .padding(0.1);
+
+        var y = d3.scaleLinear()
+            .domain([0, d3.max(data, function (d) { return d.Population; })])
+            .nice()
+            .range([height, 0]);
+
+        var bars = svg.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", function (d) { return x(d.Year); })
+            .attr("y", function (d) { return y(d.Population); })
+            .attr("width", x.bandwidth())
+            .attr("height", function (d) { return height - y(d.Population); });
+
+        var line = d3.line()
+            .x(function (d) { return x(d.Year) + x.bandwidth() / 2; })
+            .y(function (d) { return y(d.Population); });
+
+        svg.append("path")
+            .datum(data)
+            .attr("class", "line")
+            .attr("d", line);
+
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        svg.append("g")
+            .call(d3.axisLeft(y)
+                .ticks(5)
+                .tickFormat(function (d) { return d + " million"; })
+            );
+
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("x", width / 2)
+            .attr("y", height + margin.top + 30)
+            .style("text-anchor", "middle")
+            .text("Year");
+
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -height / 2)
+            .attr("y", -margin.left + 15)
+            .style("text-anchor", "middle")
+            .text("Population (in millions");
+
+        yearSelector.on("change", function() {
+            var selectedYear = this.value;
+
+            bars.attr("class", function (d) {
+                return d.Year === selectedYear ? "bar-selected" : "bar";
+            });
+
+            var selectedData = data.find(function (d) {
+                return d.Year === selectedYear;
+            });
+
+            if (selectedData) {
+                d3.select("#populationDisplay1").text(selectedData.Year + ": " + selectedData.Population + " million");
+            } else {
+                d3.select("#populationDisplay1").text("");
+            }
+        });
+    </script>
+
+    <p>
+        Caption(above): "America's changing population: a visualization of trends". 
+        To begin, the data found in this visualization illustrates the shift in the population of the United States from 1955 to 2023. From this point of view, it reflects a prolonged period of population growth with the U.S population increasing over several decades. However, there are more things the data could tell us:
+    </p>
+    <ol>
+        <li>Population Decline: The data clearly shows that the U.S. population has experienced fluctuations over the years. Despite this, there has been a gradual increase from 1955 to 2020, followed by a slight decline in 2022 and 2023.</li>
+        <li>Shift in Trends: The population growth that had been observed for decades seems to have plateaued and even slightly decreased in recent years, as indicated by the dip in the chart.</li>
+        <li>Yearly Variations: By selecting specific years from the dropdown menu, you can see the population for a particular year. This feature allows you to pinpoint the changes in population for individual years.</li>
+    </ol>
+    <p>What does this mean: The steady population growth experienced for decades seems to have plateaued in the last couple of years, with a slight dip. But what does this really mean for the nation's future? The plateau is not necessarily indicative of a shrinking population but rather a slowing growth rate. Now the data behind a slowing growth rate will be analyzed.</p>
+
+    <h2>Population Growth Scatterplot (click on dot for interactiveness)</h2>
+    <p>Author: Victor Ariton</p>
+    <div id="chart2"></div>
+
+    <script>
+        var growthData = [
+            { Year: "2025", Growth: 0.45 },
+            { Year: "2030", Growth: 0.49 },
+            { Year: "2035", Growth: 0.44 },
+            { Year: "2040", Growth: 0.36 },
+            { Year: "2045", Growth: 0.28 },
+            { Year: "2050", Growth: 0.20 }
+        ];
+
+        var width2 = 800;
+        var height2 = 500;
+        var margin2 = { top: 50, right: 50, bottom: 50, left: 50 };
+        var innerWidth2 = width2 - margin2.left - margin2.right;
+        var innerHeight2 = height2 - margin2.top - margin2.bottom;
+
+        var svg2 = d3.select("#chart2")
+            .append("svg")
+            .attr("width", width2)
+            .attr("height", height2);
+
+        var g2 = svg2.append("g")
+            .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+        var xScale2 = d3.scaleBand()
+            .domain(growthData.map(function(d) { return d.Year; }))
+            .range([0, innerWidth2])
+            .padding(0.1);
+
+        var yScale2 = d3.scaleLinear()
+            .domain([0, d3.max(growthData, function(d) { return d.Growth; })])
+            .range([innerHeight2, 0]);
+
+        var xAxis2 = d3.axisBottom(xScale2);
+        var yAxis2 = d3.axisLeft(yScale2);
+
+        g2.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", "translate(0," + innerHeight2 + ")")
+            .call(xAxis2)
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end");
+
+        g2.append("g")
+            .attr("class", "y-axis")
+            .call(yAxis2);
+
+        g2.append("text")
+            .attr("class", "axis-label")
+            .attr("x", innerWidth2 / 2)
+            .attr("y", innerHeight2 + margin2.bottom - 10)
+            .style("text-anchor", "middle")
+            .text("Year");
+
+        g2.append("text")
+            .attr("class", "axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -innerHeight2 / 2)
+            .attr("y", -margin2.left + 10)
+            .style("text-anchor", "middle")
+            .text("Population Growth");
+
+        var selectedCircle = null;
+
+        var circles2 = g2.selectAll(".scatter-dot")
+            .data(growthData)
+            .enter().append("circle")
+            .attr("class", "scatter-dot")
+            .attr("cx", function(d) { return xScale2(d.Year) + xScale2.bandwidth() / 2; })
+            .attr("cy", function(d) { return yScale2(d.Growth); })
+            .attr("r", 5);
+
+        circles2.on("click", function(d, i) {
+            var clickedCircle = d3.select(this);
+
+            if (selectedCircle) {
+                selectedCircle.transition().attr("r", 5);
+            }
+
+            selectedCircle = clickedCircle;
+
+            clickedCircle.transition()
+                .attr("r", 20);
+
+            g2.selectAll(".scatter-label").remove(); 
+           
+            g2.append("text")
+                .attr("class", "scatter-label")
+                .attr("x", xScale2(d.Year) + xScale2.bandwidth() / 2)
+                .attr("y", yScale2(d.Growth) - 15)
+                .text("Data: " + d.Year);
+        });
+    </script>
+
+    <p>
+        Caption(above): “A closer look at population growth rates in America” 
+        The data found in this visualization illustrates the decline in population growth rate among the years especially the years forecasted into the future. For instance, the declining growth rates depicted by the decreasing height of the dots mirror the plateau observed in the first visualization. By such, there is alignment of datasets that may provide context for the changing population dynamics in the United States. On a fundamental level the data explains, the population is not shrinking, but the rate of growth is slowing down. More specifically the data tells us this:
+    </p>
+    <ol>
+        <li>Declining Growth Rates: The scatterplot illustrates a gradual decline in U.S. population growth rates from 2025 to 2050.</li>
+        <li>Alignment of first visualization: The decreasing growth rates found in the scatterplot align with the plateau found in the first visualization. The U.S population is not shrinking but the rate of growth is
+
+        <li>Interactive Exploration: The interactive element of the scatterplot allows users to explore specific years and observe corresponding growth rates.</li>
+    </ol>
+
+    <h2>Population Change Over Time</h2>
+    <p>Author: Victor Ariton</p>
+    <div id="chart3"></div>
+<div id="chart3"></div>
+
+<p>
+    Caption (Above): “Exploring the U.S population change through yearly percentage change” 
+    This visualization helps to provide context and an overview of the U.S population change over time. In this case, separate from the other two visualizations, this outlines yearly percentage change. The data shows the compelling narrative of shifting population growth. These are the key insights from the data:
+</p>
+<ol>
+    <li>Fluctuating Growth Rates: The area plot illustrates the fluctuations in the annual percentage change in population. A notable decrease in the yearly percentage change is observable from around 2005 to 2020, indicating a significant reduction in population growth rates.</li>
+    <li>Correlation with Earlier Trends: The diminishing yearly percentage change, as depicted in this visualization, mirrors the plateauing and slight decline seen in the previous scatterplot, emphasizing a shift in population dynamics over the years.</li>
+</ol>
+
+<script>
+    var data = [
+        { Year: "1955", "Yearly % Change": 1.68 },
+        { Year: "1960", "Yearly % Change": 1.80 },
+        { Year: "1965", "Yearly % Change": 1.49 },
+        { Year: "1970", "Yearly % Change": 1.10 },
+        { Year: "1975", "Yearly % Change": 1.07 },
+        { Year: "1980", "Yearly % Change": 1.10 },
+        { Year: "1985", "Yearly % Change": 1.05 },
+        { Year: "1990", "Yearly % Change": 1.08 },
+        { Year: "1995", "Yearly % Change": 1.38 },
+        { Year: "2000", "Yearly % Change": 1.23 },
+        { Year: "2005", "Yearly % Change": 1.00 },
+        { Year: "2010", "Yearly % Change": 0.95 },
+        { Year: "2015", "Yearly % Change": 0.85 },
+        { Year: "2020", "Yearly % Change": 0.49 },
+        { Year: "2022", "Yearly % Change": 0.38 },
+        { Year: "2023", "Yearly % Change": 0.50 }
+    ];
+
+    var margin = { top: 20, right: 20, bottom: 40, left: 50 };
+    var width = 800 - margin.left - margin.right;
+    var height = 400 - margin.top - margin.bottom;
+
+    var svg = d3.select("#chart3")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.scaleBand()
+        .domain(data.map(function (d) { return d.Year; }))
+        .range([0, width])
+        .padding(0.1);
+
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(data, function (d) { return d["Yearly % Change"]; })])
+        .nice()
+        .range([height, 0]);
+
+    var area = d3.area()
+        .x(function (d) { return x(d.Year); })
+        .y0(height)
+        .y1(function (d) { return y(d["Yearly % Change"]); });
+
+    svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("d", area);
+
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + margin.top + 20)
+        .style("text-anchor", "middle")
+        .text("Year");
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -margin.left + 10)
+        .style("text-anchor", "middle")
+        .text("Yearly % Change");
+</script>
+
+  
+
+    <p>What does this mean: Overall, through the viewing of three visualizations; it is important to see that there is declining yearly percentage changes and growth despite the population continuing to increase. However, in order to have a full understanding of the decline, it is important and necessary to understand the factors behind the trend. These are inclusive but not limited to declining birth rates and increased life expectancy. For instance, in supplemental data provided by worldometer it depicts these factors in presentable visualizations.</p>
+
+    <p>
+        Above and Below: United States demographics. Worldometer. (n.d.-a). <a href="https://www.worldometers.info/demographics/us-demographics/#tfr">https://www.worldometers.info/demographics/us-demographics/#tfr</a>
+    </p>
+</p> **I cannot import the screenshot because it is found as data and cannot import image but feel free to check the website
+</p>
+
+    <h2>Conclusion:</h2>
+    <p>
+        In conclusion, the data showcases that there is a shift undergoing in the U.S population growth. However, as discussed nearing the end this prompts a thoughtful discussion of whether it is a cause for concern. Thus, while narratives on the internet (like the original story chosen) may exaggerate the data, a closer look is required. 
+    </p>
+    <p>
+        The population data, illustrated in the first visualization, showcases a prolonged period of population growth in the United States. It's evident that despite fluctuations, there has been a consistent increase from 1955 to 2020, followed by a minor decline in 2022 and 2023. This shift in trends indicates that population growth, which had been observed for decades, seems to have plateaued and even slightly decreased in recent years.
+    </p>
+    <p>
+        To understand what this means, we dive into the growth rate data. The second visualization highlights the declining population growth rates, especially in the years forecasted into the future. This decline aligns with the plateau observed in the first visualization, suggesting that the U.S. population isn't shrinking but experiencing a slowdown in its growth rate.
+    </p>
+    <p>
+        The third visualization, which focuses on yearly percentage change, adds context to the discussion. It illustrates fluctuating growth rates, with a noticeable decrease in noticeable decrease in the yearly percentage change from around 2005 to 2020, signifying a significant reduction in population growth rates.
+        Finally, the last two visualizations (not created by me) are essential to understanding the supplemental factors behind the trend. Factors such as declining birth trades and increased life expectance contribute to this shift. 
+        Overall, the narrative of U.S. population growth is evolving, and while some concerns are warranted, a nuanced perspective suggests that the situation is not as dire as some may portray and is as a result of other factors. Understanding the underlying factors is crucial in making informed assessments and understanding that this is a natural process and the population will still continue to increase despite lower growth rates. 
+        
+
+
+        <p><strong>REFERENCES:</strong></p>
+
+        <p><strong>Story Used:</strong></p>
+        <p>Wise, J. (2023, January 3). America’s population could use a boom. Intelligencer.  Written by Jeff Wise<a href="https://nymag.com/intelligencer/2023/01/americas-population-could-use-a-boom.html">https://nymag.com/intelligencer/2023/01/americas-population-could-use-a-boom.html</a></p>
+        
+        <p><strong>Supporting Data: (Dataset I used for this module)</strong></p>
+        <p>United States population (live). Worldometer. (n.d.). <a href="https://www.worldometers.info/world-population/us-population/">https://www.worldometers.info/world-population/us-population/</a></p>
+        <p>United States demographics. Worldometer. (n.d.-a). <a href="https://www.worldometers.info/demographics/us-demographics/#tfr">https://www.worldometers.info/demographics/us-demographics/#tfr</a></p>
+        </p>
+        
